@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cartStore'
 
 const props = defineProps({
   product: {
@@ -10,9 +11,16 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const cartStore = useCartStore()
 
 const navigateToProduct = () => {
   router.push(`/product/${props.product.id}`)
+}
+
+const handleAddToCart = () => {
+  if (props.product.stock > 0) {
+    cartStore.addToCart(props.product)
+  }
 }
 
 onMounted(() => {
@@ -44,6 +52,13 @@ onUnmounted(() => {
       <div class="card-actions justify-end mt-4">
         <button @click="navigateToProduct" class="btn btn-primary">
           View Product
+        </button>
+        <button 
+          @click="handleAddToCart" 
+          class="btn btn-secondary"
+          :disabled="product.stock === 0"
+        >
+          {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
         </button>
       </div>
     </div>

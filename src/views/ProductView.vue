@@ -1,13 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, computed, inject } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import ProductDetails from '../components/ProductDetails.vue'
 import ProductCard from '../components/ProductCard.vue'
+import { useProductStore } from '../stores/productStore'
 
-const products = inject('products')
-const addToCart = inject('addToCart')
-const handleBuy = inject('handleBuy')
-
+const productStore = useProductStore()
 const route = useRoute()
 
 const productId = computed(() => {
@@ -15,23 +13,25 @@ const productId = computed(() => {
 })
 
 const product = computed(() => {
-  return products.value.find(p => p.id === productId.value)
+  return productStore.getProductById(productId.value)
 })
 
 const relatedProducts = computed(() => {
-  return products.value.filter(p => p.id !== productId.value)
+  const currentId = productId.value
+  const numericCurrentId = typeof currentId === 'string' ? parseInt(currentId) : currentId
+  return productStore.products.filter(p => p.id !== numericCurrentId && p.id !== numericCurrentId.toString())
 })
 
-const onBuy = (productId) => {
-  handleBuy(productId)
-}
+const hasError = computed(() => {
+  return productStore.error !== null
+})
 
-const onAddToCart = (productId) => {
-  addToCart(productId)
-}
-
-onMounted(() => {
+onMounted(async () => {
   console.log(`ProductView mounted for ID: ${productId.value}`)
+
+  if (productStore.products.length === 0) {
+    await productStore.fetchProducts()
+  }
 })
 
 onUnmounted(() => {
@@ -41,11 +41,7 @@ onUnmounted(() => {
 
 <template>
   <div v-if="product">
-    <ProductDetails 
-      :product="product" 
-      @buy="onBuy" 
-      @addToCart="onAddToCart" 
-    />
+    <ProductDetails :product="product" />
     
     <div class="mt-12">
       <h3 class="text-2xl font-bold mb-6">Related Products</h3>
@@ -58,7 +54,24 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  
+
+  <div v-else-if="hasError" class="text-center py-12">
+    <p class="text-error text-xl">Error: {{ productStore.error }}</p>
+    <button @click="productStore.fetchProducts" class="btn btn-primary mt-4">
+      Retry
+    </button>
+  </div>
+  
+  <div v-else-if="productStore.loading" class="text-center py-12">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+    <p class="mt-4">Loading product...</p>
+  </div>
+  
   <div v-else class="text-center py-12">
     <h2 class="text-2xl font-bold">Product not found</h2>
+    <RouterLink to="/" class="btn btn-primary mt-4">
+      Back to Home
+    </RouterLink>
   </div>
 </template>

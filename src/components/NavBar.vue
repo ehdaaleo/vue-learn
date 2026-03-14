@@ -1,16 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
+import { useCartStore } from '../stores/cartStore'
+import { useProductStore } from '../stores/productStore'
 
-defineProps({
-  totalStock: {
-    type: Number,
-    required: true
-  },
-  cartCount: {
-    type: Number,
-    required: true
-  }
-})
+const cartStore = useCartStore()
+const productStore = useProductStore()
 
 onMounted(() => {
   console.log('NavBar mounted')
@@ -42,10 +36,10 @@ onUnmounted(() => {
           </li>
         </ul>
         <div class="badge badge-primary ml-4">
-          Stock: {{ totalStock }}
+          Stock: {{ productStore.totalStock }}
         </div>
         <div class="badge badge-secondary ml-2">
-          🛒 {{ cartCount }}
+          🛒 {{ cartStore.totalItems }}
         </div>
       </div>
     </div>

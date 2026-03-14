@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, computed } from 'vue'
+import { useCartStore } from '../stores/cartStore'
 
 const props = defineProps({
   product: {
@@ -8,7 +9,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['buy', 'addToCart'])
+const cartStore = useCartStore()
 
 const discountedPrice = computed(() => {
   if (props.product.discount > 0) {
@@ -17,12 +18,16 @@ const discountedPrice = computed(() => {
   return props.product.price
 })
 
-const handleBuy = () => {
-  emit('buy', props.product.id)
+const handleAddToCart = () => {
+  if (props.product.stock > 0) {
+    cartStore.addToCart(props.product)
+  }
 }
 
-const handleAddToCart = () => {
-  emit('addToCart', props.product.id)
+const handleBuy = () => {
+  if (props.product.stock > 0) {
+    cartStore.addToCart(props.product)
+  }
 }
 
 onMounted(() => {
